@@ -879,7 +879,8 @@
     <section class="section section-alt">
         <div class="container">
             <h2 class="section-title">How It Works</h2>
-            <p class="section-sub">A four-step pipeline from image capture to clinical prediction.</p>
+            <p class="section-sub">A five-step pipeline from image capture to clinical prediction and assistant-guided
+                follow-up.</p>
             <div class="steps">
                 <div class="step-item">
                     <div class="step-num">1</div>
@@ -906,6 +907,12 @@
                     <h4>Get Results</h4>
                     <p>Receive instant diagnosis: prediction label, confidence percentage, top-k classes, and detected
                         region preview.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">5</div>
+                    <h4>AI Follow-up</h4>
+                    <p>Open AI assistant for report explanation, precautions, hospital finder, and booking receipt
+                        workflow.</p>
                 </div>
             </div>
         </div>
@@ -1189,16 +1196,22 @@
                 <div class="card"
                     style="font-family:'Consolas','Monaco',monospace;font-size:.82rem;background:#1e293b;color:#e2e8f0;line-height:1.9;padding:24px 28px;border:none">
                     <pre style="margin:0;white-space:pre-wrap">HealthVision AI/
-├── app.py                      # Flask backend — routes, model loading, prediction APIs
-├── train_models.py             # Training script for all three models
+├── app.py                      # Flask backend — routes, model loading, prediction + AI APIs
 ├── requirements.txt            # Python dependencies
 ├── jaundice_model.h5           # Trained Jaundice model (MobileNetV2)
 ├── face_model.h5               # Trained Face/Skin model (EfficientNetB0)
 ├── nail_model.h5               # Trained Nail model (MobileNetV2)
+├── render.yaml                 # Render deployment config
+├── startup.txt                 # Startup command reference
 ├── templates/
-│   ├── index.html              # Main application (SPA with detection tool)
+│   ├── index.html              # Landing page
+│   ├── detect.html             # Detection interface (upload + camera)
+│   ├── ai_assistant.html       # AI assistant + hospital finder + booking UI
 │   ├── documentation.html      # Documentation overview page
-│   └── documentation_detailed.html  # Full technical documentation
+│   ├── documentation_detailed.html  # Full technical documentation
+│   └── project_report.html     # Academic project report
+├── imase/
+│   └── Hospital.png            # Hospital card image asset
 ├── Team/                       # Team member profile images
 │   ├── 01.png ... 05.png
 ├── Test Data set/              # Training datasets
@@ -1253,6 +1266,54 @@
                                     <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">Main application page
                                     </td>
                                     <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">—</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><span class="tag"
+                                            style="background:#d1fae5;color:#065f46">GET</span></td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-family:monospace">
+                                        /ai-assistant</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">AI assistant page
+                                        (report Q&amp;A + hospital finder)</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">—</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><span class="tag"
+                                            style="background:#d1fae5;color:#065f46">GET</span></td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-family:monospace">
+                                        /health</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">Service health and
+                                        model availability</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">—</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><span class="tag"
+                                            style="background:#d1fae5;color:#065f46">GET</span></td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-family:monospace">
+                                        /imase/&lt;filename&gt;</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">Static image assets
+                                        (assistant hospital cards)</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">—</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><span class="tag"
+                                            style="background:rgba(8,145,178,.1);color:var(--primary-dark)">POST</span>
+                                    </td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-family:monospace">
+                                        /api/ai/report</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">Generate structured
+                                        report from scan payload</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">JSON: scan_result</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><span class="tag"
+                                            style="background:rgba(8,145,178,.1);color:var(--primary-dark)">POST</span>
+                                    </td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-family:monospace">
+                                        /api/ai/chat</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">Assistant chat
+                                        response + appointment intent handling</td>
+                                    <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0">JSON: message,
+                                        scan_result, location</td>
                                 </tr>
                                 <tr>
                                     <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0"><span class="tag"

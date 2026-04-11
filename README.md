@@ -74,18 +74,22 @@ The platform offers a user-friendly web interface that supports both image uploa
 
 ## ✨ Features
 
-| Feature                       | Description                                                                   |
-| ----------------------------- | ----------------------------------------------------------------------------- |
-| **Three Detection Modules**   | Eye (Jaundice), Face (Skin Diseases), and Nail (Nail Diseases)                |
-| **Deep Learning Models**      | Transfer learning with EfficientNetB0 and MobileNetV2 architectures           |
-| **Multiple Input Methods**    | File upload (PNG, JPG, JPEG, JFIF, BMP, WebP) and live camera capture         |
-| **Advanced Image Processing** | Haar cascade eye detection, bilateral filtering, CLAHE normalization          |
-| **Comprehensive Results**     | Disease prediction with confidence scores, top-3 predictions, severity levels |
-| **Detailed Health Reports**   | Disease descriptions, causes, symptoms, and doctor recommendations            |
-| **Printable Reports**         | Generate and print health assessment reports directly from the browser        |
-| **Demo Mode**                 | Fully functional UI demonstration when models are not loaded                  |
-| **Responsive Design**         | Works across desktop and mobile devices                                       |
-| **Production Ready**          | Configured for deployment on Render with Gunicorn WSGI server                 |
+| Feature                          | Description                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| **Three Detection Modules**      | Eye (Jaundice), Face (Skin Diseases), and Nail (Nail Diseases)                   |
+| **Deep Learning Models**         | Transfer learning with EfficientNetB0 and MobileNetV2 architectures              |
+| **Multiple Input Methods**       | File upload (PNG, JPG, JPEG, JFIF, BMP, WebP) and live camera capture            |
+| **Advanced Image Processing**    | Haar cascade eye detection, bilateral filtering, CLAHE normalization             |
+| **Comprehensive Results**        | Disease prediction with confidence scores, top-3 predictions, severity levels    |
+| **Detailed Health Reports**      | Disease descriptions, causes, symptoms, and doctor recommendations               |
+| **Printable Reports**            | Generate and print health assessment reports directly from the browser           |
+| **AI Health Assistant**          | Context-aware chatbot with report explanation, precautions, and doctor checklist |
+| **Hospital Finder & Booking UI** | State/district hospital discovery with card-based results and printable receipt  |
+| **Chat Timeline UX**             | Hospital cards render inline in chat so new Q/A always appears at the bottom     |
+| **Render Stability Hardening**   | Input downscaling, upload-size guard, and TensorFlow-safe startup flow           |
+| **Demo Mode**                    | Fully functional UI demonstration when models are not loaded                     |
+| **Responsive Design**            | Works across desktop and mobile devices                                          |
+| **Production Ready**             | Configured for deployment on Render with Gunicorn WSGI server                    |
 
 ---
 
@@ -236,9 +240,12 @@ HealthVision-AI/
 ├── templates/                      # HTML templates
 │   ├── index.html                  # Landing page (features, about, team)
 │   ├── detect.html                 # Detection interface (upload + camera)
+│   ├── ai_assistant.html           # AI assistant with chat + hospital finder + booking UI
 │   ├── documentation.html          # Documentation page
 │   ├── documentation_detailed.html # Detailed medical/API documentation
 │   └── project_report.html         # Project report page
+├── imase/                          # Static image assets
+│   └── Hospital.png                # Hospital card image used in assistant
 │
 ├── Face Dection/                   # Face model training notebook
 │   └── Face_dataset.ipynb
@@ -318,6 +325,20 @@ opencv-python-headless
 gunicorn
 ```
 
+### Production Startup (Render)
+
+```bash
+gunicorn app:app --bind 0.0.0.0:$PORT --timeout 300 --workers 1
+```
+
+### Recommended Environment Variables (Render)
+
+```bash
+PYTHON_VERSION=3.11.9
+TF_CPP_MIN_LOG_LEVEL=2
+SKIP_MODELS=false
+```
+
 ---
 
 ## 📖 Usage Guide
@@ -344,6 +365,21 @@ gunicorn
 3. The system analyzes for: **Healthy**, **Onychomycosis**, **Psoriasis**, and additional conditions
 4. View detailed disease information, severity, and specialist recommendations
 
+### 4. AI Health Assistant (New)
+
+1. After any scan, click **Talk to AI Health Assistant**
+2. The assistant reads the latest scan and generates a structured report
+3. Ask predefined questions: explanation, precautions, diet, urgent signs, checklist
+4. Select **State + District** to find hospitals
+5. Book a slot from hospital cards and view printable booking receipt
+
+### 5. Stable Camera + Upload Flow (New)
+
+1. Camera mode is optimized for stable live demos on low-memory cloud instances
+2. Upload mode runs full model inference with input-size safeguards
+3. Oversized images return graceful API errors instead of crashing the worker
+4. Render startup is configured for TensorFlow-safe Gunicorn behavior
+
 ### Supported Image Formats
 
 `PNG` · `JPG` · `JPEG` · `JFIF` · `BMP` · `WebP`
@@ -358,10 +394,15 @@ gunicorn
 | `/detect`                 | GET    | Detection interface                                                             |
 | `/documentation`          | GET    | Documentation page                                                              |
 | `/documentation/detailed` | GET    | Detailed medical & API documentation                                            |
+| `/ai-assistant`           | GET    | AI assistant page for report Q&A and hospital support                           |
 | `/team/<filename>`        | GET    | Team member profile images                                                      |
+| `/imase/<filename>`       | GET    | Static image assets (hospital card image, etc.)                                 |
+| `/health`                 | GET    | Service health and model availability                                           |
 | `/predict/eye`            | POST   | Eye/Jaundice detection — returns prediction, confidence, eye crop, disease info |
 | `/predict/face`           | POST   | Face/Skin disease detection — returns top-3 predictions with disease info       |
 | `/predict/nail`           | POST   | Nail disease detection — returns prediction with disease info                   |
+| `/api/ai/report`          | POST   | Generates structured report from latest scan payload                            |
+| `/api/ai/chat`            | POST   | AI assistant chat responses and appointment intent handling                     |
 
 <details>
 <summary><strong>Example API Response (Eye Detection)</strong></summary>

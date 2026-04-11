@@ -459,6 +459,11 @@ def team_image(filename):
     return send_from_directory("Team", filename)
 
 
+@app.route("/imase/<path:filename>")
+def imase_file(filename):
+    return send_from_directory("imase", filename)
+
+
 def _normalize_scan_result(scan_result):
     module = (scan_result or {}).get("module", "eye")
     prediction = (scan_result or {}).get("prediction", "Unknown")

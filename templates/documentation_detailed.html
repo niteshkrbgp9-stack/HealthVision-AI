@@ -1418,6 +1418,24 @@
                             <td>—</td>
                         </tr>
                         <tr>
+                            <td><span class="tag green">GET</span></td>
+                            <td><code>/ai-assistant</code></td>
+                            <td>AI assistant page (scan report Q&amp;A + hospital finder)</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td><span class="tag green">GET</span></td>
+                            <td><code>/health</code></td>
+                            <td>Service health and model loaded flags</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td><span class="tag green">GET</span></td>
+                            <td><code>/imase/&lt;filename&gt;</code></td>
+                            <td>Static assets route used by assistant hospital cards</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
                             <td><span class="tag primary">POST</span></td>
                             <td><code>/predict/eye</code></td>
                             <td>Jaundice detection from eye image</td>
@@ -1434,6 +1452,18 @@
                             <td><code>/predict/nail</code></td>
                             <td>Nail disease detection from nail image</td>
                             <td>Form data: <code>file</code> (image)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="tag primary">POST</span></td>
+                            <td><code>/api/ai/report</code></td>
+                            <td>Builds structured assistant report from scan payload</td>
+                            <td>JSON: <code>scan_result</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="tag primary">POST</span></td>
+                            <td><code>/api/ai/chat</code></td>
+                            <td>Assistant chat, guidance, and appointment intent handling</td>
+                            <td>JSON: <code>message</code>, <code>scan_result</code>, <code>location</code></td>
                         </tr>
                     </tbody>
                 </table>
@@ -1934,6 +1964,13 @@
                         analysis</li>
                     <li><strong>Result Rendering:</strong> Dynamic result card with severity-colored header, confidence
                         bars, top-k predictions, and disease information accordion</li>
+                    <li><strong>AI Assistant Journey:</strong> Structured report generation, predefined clinical
+                        Q&amp;A,
+                        risk-aware recommendations, and doctor checklist output</li>
+                    <li><strong>Hospital Finder Cards:</strong> State/district-based discovery cards with map links,
+                        booking flow, and printable receipt support</li>
+                    <li><strong>Chronological Chat Timeline:</strong> Hospital cards are appended inline as chat blocks,
+                        so every new message appears at the bottom in natural chat order</li>
                     <li><strong>Responsive Design:</strong> CSS Grid/Flexbox layouts with media queries for mobile
                         (480px), tablet (768px), and desktop</li>
                     <li><strong>Accessibility:</strong> Semantic HTML, ARIA labels, keyboard-navigable interface, high
@@ -1966,8 +2003,12 @@
                             <td>Interactive module selector, upload/camera, preview, and results panel</td>
                         </tr>
                         <tr>
+                            <td>AI Assistant</td>
+                            <td>Chat-based follow-up, report reasoning, hospital finder, and booking receipt UI</td>
+                        </tr>
+                        <tr>
                             <td>Pipeline</td>
-                            <td>4-step visual walkthrough of the detection process</td>
+                            <td>5-step visual walkthrough including assistant-guided follow-up</td>
                         </tr>
                         <tr>
                             <td>Architecture</td>
@@ -2110,6 +2151,21 @@
                     <span class="keyword">python</span> app.py
 
                     <span class="comment"># Server starts on http://0.0.0.0:5000</span>
+                </div>
+
+                <h3>Render Production Start Command</h3>
+                <div class="code-block">
+                    <span class="comment"># Gunicorn (TensorFlow-safe startup)</span>
+                    gunicorn app:app --bind 0.0.0.0:$PORT --timeout 300 --workers 1
+                </div>
+
+                <h3>Runtime Stability Controls</h3>
+                <div class="info-box amber">
+                    <strong>Cloud hardening added:</strong><br>
+                    • <code>MAX_CONTENT_LENGTH</code> guard for oversized uploads<br>
+                    • Input image downscaling before enhancement/inference<br>
+                    • Camera requests short-circuit heavy model inference path for stable UX<br>
+                    • TensorFlow thread limits and non-preload Gunicorn startup for better Render reliability
                 </div>
 
                 <h3>Training Models</h3>

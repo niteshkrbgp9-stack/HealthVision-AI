@@ -47,6 +47,8 @@
 
 The application is built using **Flask** (Python web framework), **TensorFlow/Keras** for deep learning model inference, and **OpenCV** for image preprocessing. It features a modern, responsive web interface with both image upload and live camera capture capabilities. The system provides disease information, severity assessment, and medical recommendations for each detected condition.
 
+The latest version also includes an **AI Health Assistant** for structured scan explanation, predefined clinical Q&A, state/district hospital discovery cards, appointment receipt workflow, and chronological chat timeline behavior.
+
 **Keywords:** Deep Learning, CNN, Transfer Learning, Medical Image Classification, Flask, TensorFlow, OpenCV, Healthcare AI
 
 ---
@@ -88,7 +90,8 @@ Many common health conditions like **jaundice**, **skin diseases**, and **nail d
 4. To integrate all three modules into a single, user-friendly web application.
 5. To provide detailed disease information, severity, causes, symptoms, and recommendations.
 6. To enable both image upload and real-time camera capture functionality.
-7. To deploy the application on a cloud platform for online accessibility.
+7. To provide AI-guided post-screening support with report explanation and hospital discovery.
+8. To deploy the application on a cloud platform for online accessibility.
 
 ---
 
@@ -301,6 +304,18 @@ The system includes a comprehensive database of 25+ diseases/conditions with:
 | Detection Page         | Three-tab detection interface with upload & camera |
 | Documentation          | Technical documentation and usage guide            |
 | Detailed Documentation | In-depth API and architecture documentation        |
+
+### 8.6 Module 6: AI Assistant & Hospital Support
+
+**Purpose:** Provide contextual post-prediction support so users can understand screening output and take next steps.
+
+**Capabilities:**
+
+1. Generates structured report from latest scan context.
+2. Answers predefined questions (explain, precautions, diet, urgent signs, checklist).
+3. Finds hospitals via state and district filters and shows interactive cards.
+4. Supports booking UI with printable receipt details.
+5. Keeps conversation flow chronological by appending hospital cards inline in chat timeline.
 
 **Frontend Features:**
 
@@ -521,8 +536,11 @@ HealthVision AI/
 ├── templates/                      # HTML Templates
 │   ├── index.html                  # Home/Landing page
 │   ├── detect.html                 # Detection interface
+│   ├── ai_assistant.html           # AI assistant + hospital finder + booking UI
 │   ├── documentation.html          # Documentation page
 │   └── documentation_detailed.html # Detailed documentation
+├── imase/
+│   └── Hospital.png                # Hospital card image asset
 │
 ├── Face Detection/                 # Jupyter Notebooks
 │   └── Face_dataset.ipynb          # Face model training notebook
@@ -689,13 +707,16 @@ def detect_eye(image):
 
 ### 14.2 Integration Testing
 
-| **Test ID** | **Description**                        | **Status** |
-| ----------- | -------------------------------------- | ---------- |
-| IT-01       | Frontend → Backend API communication   | Pass       |
-| IT-02       | Image upload + processing pipeline     | Pass       |
-| IT-03       | Camera capture + prediction flow       | Pass       |
-| IT-04       | Model loading at startup               | Pass       |
-| IT-05       | Disease info retrieval for predictions | Pass       |
+| **Test ID** | **Description**                          | **Status** |
+| ----------- | ---------------------------------------- | ---------- |
+| IT-01       | Frontend → Backend API communication     | Pass       |
+| IT-02       | Image upload + processing pipeline       | Pass       |
+| IT-03       | Camera capture + prediction flow         | Pass       |
+| IT-04       | Model loading at startup                 | Pass       |
+| IT-05       | Disease info retrieval for predictions   | Pass       |
+| IT-06       | AI report generation endpoint            | Pass       |
+| IT-07       | Chat timeline with inline hospital cards | Pass       |
+| IT-08       | Upload inference stability on Render     | Pass       |
 
 ### 14.3 Supported File Formats
 
@@ -752,6 +773,7 @@ Key achievements of this project include:
 - Successful implementation of CNN-based medical image classification models.
 - A robust image preprocessing pipeline with enhancement and intelligent region detection.
 - A modern, responsive web interface with both upload and camera functionality.
+- An integrated AI assistant flow with contextual guidance and hospital follow-up support.
 - A comprehensive disease information database providing users with actionable health insights.
 - Cloud deployment for universal accessibility.
 

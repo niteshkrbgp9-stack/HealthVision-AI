@@ -505,7 +505,9 @@
                 <strong>TensorFlow/Keras</strong> for deep learning model inference, and <strong>OpenCV</strong> for
                 image preprocessing. It features a modern, responsive web interface with both image upload and live
                 camera capture capabilities. The system provides disease information, severity assessment, and medical
-                recommendations for each detected condition.</p>
+                recommendations for each detected condition. It also includes an AI Health Assistant with structured
+                report explanation, guided Q&amp;A, state/district hospital finder, and appointment receipt workflow.
+            </p>
             <p><strong>Keywords:</strong> Deep Learning, CNN, Transfer Learning, Medical Image Classification, Flask,
                 TensorFlow, OpenCV, Healthcare AI</p>
         </section>
@@ -535,7 +537,8 @@
         <section id="problem-statement">
             <h2>3. Problem Statement</h2>
             <p>Many common health conditions like <strong>jaundice</strong>, <strong>skin diseases</strong>, and
-                <strong>nail disorders</strong> require visual inspection for initial diagnosis. However:</p>
+                <strong>nail disorders</strong> require visual inspection for initial diagnosis. However:
+            </p>
             <ul>
                 <li>Access to dermatologists and specialists is limited in rural/remote areas.</li>
                 <li>Early symptoms are often ignored due to lack of awareness.</li>
@@ -556,6 +559,7 @@
                 <li>To integrate all three modules into a single, user-friendly web application.</li>
                 <li>To provide detailed disease information, severity, causes, symptoms, and recommendations.</li>
                 <li>To enable both image upload and real-time camera capture functionality.</li>
+                <li>To provide AI-guided post-screening support with report explanation and hospital discovery.</li>
                 <li>To deploy the application on a cloud platform for online accessibility.</li>
             </ol>
         </section>
@@ -802,7 +806,21 @@
                     <td>Project Report</td>
                     <td>Complete academic project report</td>
                 </tr>
+                <tr>
+                    <td>AI Assistant</td>
+                    <td>Scan-aware Q&amp;A, hospital finder cards, booking and receipt generation</td>
+                </tr>
             </table>
+
+            <h3>8.6 Module 6: AI Assistant &amp; Hospital Support</h3>
+            <p><strong>Purpose:</strong> Provide contextual post-prediction support so users can understand screening
+                outputs and plan medical follow-up.</p>
+            <ol>
+                <li>Consumes latest scan payload and generates structured report from backend API.</li>
+                <li>Answers predefined health queries: explanation, precautions, diet, urgent signs, and checklist.</li>
+                <li>Provides state/district hospital card listing with map links and booking flow.</li>
+                <li>Maintains chronological chat timeline where hospital cards and Q&amp;A are appended in order.</li>
+            </ol>
         </section>
 
         <!-- 9. Dataset Description -->
@@ -989,9 +1007,12 @@
 ├── templates/
 │   ├── index.html            # Home/Landing page
 │   ├── detect.html           # Detection interface
+│   ├── ai_assistant.html     # AI assistant + hospital finder
 │   ├── documentation.html    # Documentation page
 │   ├── documentation_detailed.html
 │   └── project_report.html   # Project Report page
+├── imase/
+│   └── Hospital.png          # Assistant hospital card image
 ├── Face Detection/
 │   └── Face_dataset.ipynb
 ├── Jaundice Detection/
@@ -1185,6 +1206,21 @@ CUSTOM_OBJECTS = {"DepthwiseConv2D": PatchedDepthwiseConv2D}</code></pre>
                     <td>Disease info retrieval for predictions</td>
                     <td>✅ Pass</td>
                 </tr>
+                <tr>
+                    <td>IT-06</td>
+                    <td>AI report generation from scan payload</td>
+                    <td>✅ Pass</td>
+                </tr>
+                <tr>
+                    <td>IT-07</td>
+                    <td>Chat timeline order with inline hospital cards</td>
+                    <td>✅ Pass</td>
+                </tr>
+                <tr>
+                    <td>IT-08</td>
+                    <td>Upload inference stability on Render</td>
+                    <td>✅ Pass</td>
+                </tr>
             </table>
         </section>
 
@@ -1257,6 +1293,7 @@ CUSTOM_OBJECTS = {"DepthwiseConv2D": PatchedDepthwiseConv2D}</code></pre>
                 <li>Successful implementation of CNN-based medical image classification models.</li>
                 <li>A robust image preprocessing pipeline with enhancement and intelligent region detection.</li>
                 <li>A modern, responsive web interface with both upload and camera functionality.</li>
+                <li>An integrated AI assistant workflow for report guidance and hospital follow-up support.</li>
                 <li>A comprehensive disease information database providing users with actionable health insights.</li>
                 <li>Cloud deployment for universal accessibility.</li>
             </ul>
