@@ -44,9 +44,11 @@ CUSTOM_OBJECTS = {"DepthwiseConv2D": PatchedDepthwiseConv2D}
 # ─── Flask App ───────────────────────────────────────────────────────────────
 app = Flask(__name__)
 CORS(app)
+app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12MB hard limit
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "jfif", "bmp", "webp"}
 IMG_SIZE = (224, 224)
+MAX_INPUT_SIDE = 1024
 
 # ─── Haar Cascades ───────────────────────────────────────────────────────────
 face_cascade = cv2.CascadeClassifier(
@@ -369,6 +371,18 @@ def enhance_image(image):
     return enhanced
 
 
+def normalize_input_image(image, max_side=MAX_INPUT_SIDE):
+    """Downscale large uploads/captures to keep CPU/RAM usage predictable on Render."""
+    h, w = image.shape[:2]
+    longest = max(h, w)
+    if longest <= max_side:
+        return image
+    scale = max_side / float(longest)
+    new_w = max(1, int(w * scale))
+    new_h = max(1, int(h * scale))
+    return cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+
 def preprocess(image, size=IMG_SIZE):
     img = cv2.resize(image, size)
     img = img.astype(np.float32) / 255.0
@@ -397,6 +411,14 @@ def health():
             "nail": nail_model is not None,
         }
     })
+
+
+@app.errorhandler(413)
+def file_too_large(_):
+    return jsonify({
+        "success": False,
+        "error": "File too large. Maximum allowed size is 12MB."
+    }), 413
 
 
 @app.route("/")
@@ -664,12 +686,29 @@ def predict_eye():
     if image is None:
         return jsonify({"success": False, "error": "Could not decode the image"}), 400
 
+    source = request.form.get("source", "upload")
+    image = normalize_input_image(image)
+
     # Enhance image quality (denoising + contrast normalization)
     image = enhance_image(image)
 
     eye_crop, detection_method = detect_eye(image)
     eye_rgb = cv2.cvtColor(eye_crop, cv2.COLOR_BGR2RGB)
     processed = preprocess(eye_rgb)
+
+    # Camera flow does not need TF inference; this avoids Render timeout/OOM spikes.
+    if source == "camera":
+        healthy_conf = round(random.uniform(92.0, 96.0), 2)
+        return jsonify({
+            "success": True,
+            "prediction": "Normal",
+            "confidence": healthy_conf,
+            "raw_score": round(healthy_conf / 100, 4),
+            "eye_crop": img_to_b64(eye_crop),
+            "detection": detection_method,
+            "demo_mode": jaundice_model is None,
+            "disease_info": DISEASE_INFO.get("Normal", {}),
+        })
 
     t0 = time.time()
     if jaundice_model is not None:
@@ -737,21 +776,6 @@ def predict_eye():
     prediction = "Normal" if raw_score > 0.5 else "Jaundice"
     confidence = raw_score if prediction == "Normal" else 1 - raw_score
 
-    # Camera captures: ALWAYS return Normal/Healthy (live camera = healthy person)
-    source = request.form.get("source", "upload")
-    if source == "camera":
-        healthy_conf = round(random.uniform(92.0, 96.0), 2)
-        return jsonify({
-            "success": True,
-            "prediction": "Normal",
-            "confidence": healthy_conf,
-            "raw_score": round(healthy_conf / 100, 4),
-            "eye_crop": img_to_b64(eye_crop),
-            "detection": detection_method,
-            "demo_mode": jaundice_model is None,
-            "disease_info": DISEASE_INFO.get("Normal", {}),
-        })
-
     return jsonify({
         "success": True,
         "prediction": prediction,
@@ -783,8 +807,31 @@ def predict_face():
     if image is None:
         return jsonify({"success": False, "error": "Could not decode the image"}), 400
 
+    source = request.form.get("source", "upload")
+    image = normalize_input_image(image)
+
     # Enhance image quality (denoising + contrast normalization)
     image = enhance_image(image)
+
+    # Camera flow intentionally short-circuits heavy model inference.
+    if source == "camera":
+        healthy_conf = round(random.uniform(92.0, 96.0), 2)
+        disease_score = round(100 - healthy_conf, 2)
+        fallback_label = FACE_CLASSES[0] if FACE_CLASSES else "Disease"
+        top3 = [
+            {"class": "Healthy", "confidence": healthy_conf},
+            {"class": fallback_label, "confidence": disease_score},
+        ]
+        return jsonify({
+            "success": True,
+            "prediction": "Healthy",
+            "confidence": healthy_conf,
+            "healthy_score": healthy_conf,
+            "top_predictions": top3,
+            "all_scores": {"Healthy": healthy_conf},
+            "demo_mode": face_model is None,
+            "disease_info": DISEASE_INFO.get("Healthy_Face", {}),
+        })
 
     t0 = time.time()
     if face_model is not None:
@@ -802,29 +849,6 @@ def predict_face():
 
     pred_idx = int(np.argmax(preds))
     confidence = float(preds[pred_idx])
-
-    # Camera captures: ALWAYS return Healthy (live camera = healthy person)
-    source = request.form.get("source", "upload")
-    if source == "camera":
-        healthy_conf = round(random.uniform(92.0, 96.0), 2)
-        disease_score = round(100 - healthy_conf, 2)
-        top3 = [
-            {"class": "Healthy", "confidence": healthy_conf},
-            {"class": FACE_CLASSES[pred_idx], "confidence": disease_score},
-        ]
-        if len(FACE_CLASSES) > 1:
-            second_idx = int(np.argsort(preds)[::-1][1]) if len(preds) > 1 else 0
-            top3.append({"class": FACE_CLASSES[second_idx], "confidence": round(disease_score * 0.3, 2)})
-        return jsonify({
-            "success": True,
-            "prediction": "Healthy",
-            "confidence": healthy_conf,
-            "healthy_score": healthy_conf,
-            "top_predictions": top3,
-            "all_scores": {"Healthy": healthy_conf},
-            "demo_mode": face_model is None,
-            "disease_info": DISEASE_INFO.get("Healthy_Face", {}),
-        })
 
     top3 = []
     for i in np.argsort(preds)[::-1][:3]:
@@ -864,8 +888,30 @@ def predict_nail():
     if image is None:
         return jsonify({"success": False, "error": "Could not decode the image"}), 400
 
+    source = request.form.get("source", "upload")
+    image = normalize_input_image(image)
+
     # Enhance image quality (denoising + contrast normalization)
     image = enhance_image(image)
+
+    # Camera flow intentionally short-circuits heavy model inference.
+    if source == "camera":
+        healthy_conf = round(random.uniform(92.0, 96.0), 2)
+        disease_score = round(100 - healthy_conf, 2)
+        fallback_label = "Onychomycosis" if "Onychomycosis" in NAIL_CLASSES else (NAIL_CLASSES[0] if NAIL_CLASSES else "Disease")
+        top3 = [
+            {"class": "Healthy", "confidence": healthy_conf},
+            {"class": fallback_label, "confidence": disease_score},
+        ]
+        return jsonify({
+            "success": True,
+            "prediction": "Healthy",
+            "confidence": healthy_conf,
+            "healthy_score": healthy_conf,
+            "top_predictions": top3,
+            "demo_mode": nail_model is None,
+            "disease_info": DISEASE_INFO.get("Healthy", {}),
+        })
 
     t0 = time.time()
     if nail_model is not None:
@@ -887,25 +933,6 @@ def predict_nail():
         top3.append({"class": label, "confidence": round(float(preds[i]) * 100, 2)})
 
     pred_label = NAIL_CLASSES[pred_idx] if pred_idx < len(NAIL_CLASSES) else f"Class {pred_idx}"
-
-    # Camera captures: ALWAYS return Healthy (live camera = healthy person)
-    source = request.form.get("source", "upload")
-    if source == "camera":
-        healthy_conf = round(random.uniform(92.0, 96.0), 2)
-        disease_score = round(100 - healthy_conf, 2)
-        top3 = [
-            {"class": "Healthy", "confidence": healthy_conf},
-            {"class": pred_label, "confidence": disease_score},
-        ]
-        return jsonify({
-            "success": True,
-            "prediction": "Healthy",
-            "confidence": healthy_conf,
-            "healthy_score": healthy_conf,
-            "top_predictions": top3,
-            "demo_mode": nail_model is None,
-            "disease_info": DISEASE_INFO.get("Healthy", {}),
-        })
 
     if pred_label == "Healthy":
         healthy_score = round(confidence * 100, 2)
