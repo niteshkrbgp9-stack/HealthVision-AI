@@ -18,6 +18,9 @@ from flask_cors import CORS
 # ─── TensorFlow Memory Optimization ────────────────────────────────────────
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'          # suppress TF info/warnings
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'          # disable oneDNN for stability
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
+os.environ['TF_NUM_INTEROP_THREADS'] = '1'
 
 import tensorflow as tf
 
