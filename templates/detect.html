@@ -2027,8 +2027,8 @@
                             <div class="ai-summary-body">
                                 <p id="aiDescription"></p>
                                 <div id="aiSeverityContainer"></div>
-                                <button class="summary-toggle-btn" id="summaryToggleBtn" onclick="openReportModal()">
-                                    📋 View Detailed Report
+                                <button class="summary-toggle-btn" id="summaryToggleBtn" onclick="openAIConsultation()">
+                                    🤖 Talk to AI Health Assistant
                                 </button>
                             </div>
                         </div>
@@ -2577,6 +2577,19 @@
 
             renderAISummary(data);
 
+            const scanPayload = {
+                module: currentModule,
+                prediction: data.prediction,
+                confidence: data.confidence,
+                raw_score: data.raw_score,
+                disease_info: data.disease_info || {},
+                top_predictions: data.top_predictions || [],
+                detection: data.detection || null,
+                healthy_score: data.healthy_score,
+                created_at: new Date().toISOString()
+            };
+            localStorage.setItem('hv_last_scan', JSON.stringify(scanPayload));
+
             let existingBadge = resultCard.querySelector('.demo-badge');
             if (existingBadge) existingBadge.remove();
             if (data.demo_mode) {
@@ -2671,6 +2684,24 @@
             $('reportModalBody').innerHTML = html;
             document.getElementById('reportModalOverlay').classList.add('active');
             document.body.style.overflow = 'hidden';
+        }
+
+        function openAIConsultation() {
+            if (lastReportData) {
+                const payload = {
+                    module: currentModule,
+                    prediction: lastReportData.prediction,
+                    confidence: lastReportData.confidence,
+                    raw_score: lastReportData.raw_score,
+                    disease_info: lastReportData.disease_info || {},
+                    top_predictions: lastReportData.top_predictions || [],
+                    detection: lastReportData.detection || null,
+                    healthy_score: lastReportData.healthy_score,
+                    created_at: new Date().toISOString()
+                };
+                localStorage.setItem('hv_last_scan', JSON.stringify(payload));
+            }
+            window.location.href = '/ai-assistant';
         }
 
         function closeReportModal(e) {

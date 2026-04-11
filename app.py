@@ -4,6 +4,11 @@ import gc
 import time
 import base64
 import random
+import json
+import uuid
+from datetime import datetime
+from urllib.parse import quote_plus
+from urllib.request import Request, urlopen
 import numpy as np
 import cv2
 from PIL import Image
@@ -419,9 +424,228 @@ def documentation_detailed():
     return render_template("documentation_detailed.html")
 
 
+@app.route("/ai-assistant")
+def ai_assistant():
+    return render_template("ai_assistant.html")
+
+
 @app.route("/team/<path:filename>")
 def team_image(filename):
     return send_from_directory("Team", filename)
+
+
+def _normalize_scan_result(scan_result):
+    module = (scan_result or {}).get("module", "eye")
+    prediction = (scan_result or {}).get("prediction", "Unknown")
+    confidence = float((scan_result or {}).get("confidence", 0.0) or 0.0)
+
+    if prediction == "Healthy" and module == "face":
+        info_key = "Healthy_Face"
+    else:
+        info_key = prediction
+
+    disease_info = (scan_result or {}).get("disease_info") or DISEASE_INFO.get(info_key, {})
+    severity = disease_info.get("severity", "moderate")
+    is_healthy = (module == "eye" and prediction == "Normal") or prediction == "Healthy"
+
+    return {
+        "module": module,
+        "prediction": prediction,
+        "confidence": round(confidence, 2),
+        "disease_info": disease_info,
+        "severity": severity,
+        "is_healthy": is_healthy,
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+    }
+
+
+def _build_report(scan):
+    module_names = {
+        "eye": "Eye/Jaundice",
+        "face": "Face/Skin",
+        "nail": "Nail",
+    }
+    specialists = {
+        "eye": "Ophthalmologist or Hepatologist",
+        "face": "Dermatologist",
+        "nail": "Dermatologist",
+    }
+
+    sev = scan["severity"]
+    sev_titles = {
+        "healthy": "Low Risk",
+        "mild": "Mild Risk",
+        "moderate": "Moderate Risk",
+        "high": "High Priority",
+    }
+    info = scan["disease_info"]
+
+    action_plan = [
+        "Use this as screening support, not final diagnosis.",
+        "Track symptoms for 3-7 days with photos under similar lighting.",
+        "Consult a qualified doctor if symptoms persist or worsen.",
+    ]
+
+    if sev == "healthy":
+        action_plan = [
+            "No urgent concern seen in this screening.",
+            "Maintain hygiene, hydration, sleep, and balanced nutrition.",
+            "Repeat screening if new symptoms appear.",
+        ]
+    elif sev == "high":
+        action_plan = [
+            "Prioritize medical consultation in the next 24 hours.",
+            "Avoid self-medication without clinician advice.",
+            "Carry this report and symptom timeline during consultation.",
+        ]
+
+    followup_questions = [
+        "How long has this symptom been present?",
+        "Is it improving, stable, or worsening?",
+        "Any pain, fever, itching, swelling, or discharge?",
+        "Any recent medication, allergy, or known medical history?",
+    ]
+
+    return {
+        "headline": f"{module_names.get(scan['module'], 'Health')} Screening Report",
+        "prediction": scan["prediction"],
+        "confidence": scan["confidence"],
+        "risk_level": sev_titles.get(sev, "Moderate Risk"),
+        "severity": sev,
+        "summary": info.get("description", "Detailed condition summary is not available."),
+        "possible_causes": info.get("causes", "Not enough information."),
+        "possible_symptoms": info.get("symptoms", "Not enough information."),
+        "recommendation": info.get("recommendation", "Consult a healthcare professional for detailed advice."),
+        "suggested_specialist": specialists.get(scan["module"], "General Physician"),
+        "action_plan": action_plan,
+        "doctor_questions": followup_questions,
+        "disclaimer": "This is an AI-assisted screening output, not a confirmed diagnosis.",
+    }
+
+
+def _find_nearby_hospitals(location_text, limit=5):
+    if not location_text:
+        return []
+
+    q = quote_plus(f"hospital near {location_text}")
+    url = f"https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit={max(3, limit)}&q={q}"
+    req = Request(url, headers={"User-Agent": "HealthVisionAI/1.0 (Academic Project)"})
+
+    try:
+        with urlopen(req, timeout=10) as resp:
+            raw = resp.read().decode("utf-8")
+        data = json.loads(raw)
+    except Exception:
+        return []
+
+    facilities = []
+    for item in data[:limit]:
+        name = item.get("display_name", "Hospital")
+        lat = item.get("lat")
+        lon = item.get("lon")
+        maps_query = quote_plus(name)
+        facilities.append({
+            "name": name,
+            "lat": lat,
+            "lon": lon,
+            "maps_url": f"https://www.google.com/maps/search/?api=1&query={maps_query}",
+            "appointment_url": f"https://www.google.com/search?q={maps_query}+appointment",
+        })
+    return facilities
+
+
+def _rule_based_chat(scan, message, location):
+    msg = (message or "").strip()
+    lowered = msg.lower()
+    info = scan["disease_info"]
+
+    appointment_intent = any(k in lowered for k in ["appointment", "book", "doctor", "hospital", "nearby", "clinic"])
+    diet_intent = any(k in lowered for k in ["diet", "food", "eat", "avoid"])
+    precaution_intent = any(k in lowered for k in ["precaution", "care", "prevent", "prevention", "routine"])
+
+    if appointment_intent:
+        if not location:
+            return {
+                "intent": "appointment",
+                "answer": "I can suggest nearby doctors/hospitals and help you with booking links. Please share your city, area, or PIN code.",
+                "needs_location": True,
+                "hospitals": [],
+            }
+
+        hospitals = _find_nearby_hospitals(location, limit=5)
+        appointment_id = "HV-APT-" + uuid.uuid4().hex[:8].upper()
+        if hospitals:
+            answer = f"I found {len(hospitals)} nearby options around {location}. I also created a quick appointment request ID: {appointment_id}."
+        else:
+            answer = f"I could not fetch live nearby hospitals right now. I created an appointment request ID: {appointment_id}. You can still use the generic booking link."
+
+        return {
+            "intent": "appointment",
+            "answer": answer,
+            "needs_location": False,
+            "appointment": {
+                "appointment_id": appointment_id,
+                "status": "Request Created",
+                "suggested_slots": ["Today 6:00 PM", "Tomorrow 10:30 AM", "Tomorrow 5:00 PM"],
+            },
+            "hospitals": hospitals,
+            "booking_fallback_url": f"https://www.google.com/search?q=doctor+appointment+near+{quote_plus(location)}",
+        }
+
+    if diet_intent:
+        return {
+            "intent": "guidance",
+            "answer": (
+                "Diet guidance should be personalized by a clinician. For now: keep hydration high, avoid very oily/processed food, "
+                "increase fruits/vegetables, and follow the recommendation from your report: "
+                + info.get("recommendation", "consult a doctor for personalized advice.")
+            ),
+        }
+
+    if precaution_intent:
+        return {
+            "intent": "guidance",
+            "answer": (
+                "Precautions based on your scan: "
+                + info.get("recommendation", "consult a specialist.")
+                + " Also monitor symptom changes with date-stamped photos."
+            ),
+        }
+
+    report = _build_report(scan)
+    return {
+        "intent": "qa",
+        "answer": (
+            f"Based on your scan, the prediction is {scan['prediction']} with {scan['confidence']}% confidence. "
+            f"Risk level: {report['risk_level']}. {report['recommendation']}"
+        ),
+    }
+
+
+@app.route("/api/ai/report", methods=["POST"])
+def api_ai_report():
+    payload = request.get_json(silent=True) or {}
+    scan = _normalize_scan_result(payload.get("scan_result", {}))
+    report = _build_report(scan)
+    return jsonify({"success": True, "report": report})
+
+
+@app.route("/api/ai/chat", methods=["POST"])
+def api_ai_chat():
+    payload = request.get_json(silent=True) or {}
+    message = (payload.get("message") or "").strip()
+    if not message:
+        return jsonify({"success": False, "error": "Message is required."}), 400
+
+    scan = _normalize_scan_result(payload.get("scan_result", {}))
+    location = (payload.get("location") or "").strip()
+    chat_output = _rule_based_chat(scan, message, location)
+
+    return jsonify({
+        "success": True,
+        "reply": chat_output,
+        "disclaimer": "AI assistant output is for education/screening support only.",
+    })
 
 
 # ── Eye / Jaundice ───────────────────────────────────────────────────────────

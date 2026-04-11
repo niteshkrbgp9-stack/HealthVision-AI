@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Assistant - HealthVision AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5fbff;
+            --bg-soft: #e7f3fb;
+            --ink: #0f172a;
+            --muted: #5b6475;
+            --brand: #0b6e4f;
+            --brand-2: #0f766e;
+            --accent: #c2410c;
+            --card: #ffffff;
+            --line: #d6e3ee;
+            --danger: #b42318;
+            --shadow: 0 12px 40px rgba(10, 43, 72, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Manrope', sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 15% 10%, rgba(15, 118, 110, .12) 0, transparent 42%),
+                radial-gradient(circle at 92% 8%, rgba(194, 65, 12, .08) 0, transparent 28%),
+                linear-gradient(180deg, var(--bg) 0%, #f7fbfe 60%, var(--bg-soft) 100%);
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 8;
+            background: linear-gradient(135deg, #032f2c, #0f3d3c 55%, #155e75);
+            border-bottom: 1px solid rgba(255, 255, 255, .12);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 24px rgba(2, 20, 30, .25);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.03rem;
+            font-weight: 700;
+            letter-spacing: .2px;
+            color: #e2f7fb;
+        }
+
+        .brand-mark {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: rgba(255, 255, 255, .14);
+            border: 1px solid rgba(255, 255, 255, .25);
+            font-size: 1rem;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .top-actions a {
+            text-decoration: none;
+            color: #e6fffa;
+            border: 1px solid rgba(230, 255, 250, .28);
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-size: .82rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, .07);
+            transition: all .2s ease;
+        }
+
+        .top-actions a:hover {
+            background: rgba(255, 255, 255, .18);
+            transform: translateY(-1px);
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 22px auto;
+            padding: 0 20px 24px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .summary {
+            padding: 18px;
+            display: grid;
+            gap: 14px;
+            align-content: start;
+        }
+
+        .summary h1 {
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: .92rem;
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            gap: 6px;
+            font-size: .92rem;
+        }
+
+        .kv strong {
+            color: #1f2937;
+        }
+
+        .risk {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-weight: 700;
+            font-size: .8rem;
+            width: fit-content;
+        }
+
+        .risk.healthy {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .risk.mild {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .risk.moderate {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        .risk.high {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .report-box {
+            background: #f8fcff;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .report-box h3 {
+            margin: 0 0 8px;
+            font-size: .95rem;
+        }
+
+        .report-box ul {
+            margin: 0;
+            padding-left: 18px;
+            color: #334155;
+            font-size: .9rem;
+            line-height: 1.55;
+        }
+
+        .chat {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            min-height: 76vh;
+        }
+
+        .chat-head {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .chat-head h2 {
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+        }
+
+        .chat-body {
+            padding: 14px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+        }
+
+        .bubble {
+            max-width: 82%;
+            border-radius: 14px;
+            padding: 10px 12px;
+            line-height: 1.55;
+            font-size: .93rem;
+            white-space: pre-wrap;
+        }
+
+        .bubble.user {
+            align-self: flex-end;
+            background: #dbeafe;
+            border: 1px solid #bfdbfe;
+        }
+
+        .bubble.bot {
+            align-self: flex-start;
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+        }
+
+        .search-status {
+            margin: 0 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: .83rem;
+            border: 1px solid #d9e7f3;
+            background: #f8fcff;
+            color: #334155;
+            display: none;
+        }
+
+        .search-status.active {
+            display: block;
+            animation: pulseStatus 1.2s ease-in-out infinite;
+        }
+
+        @keyframes pulseStatus {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(15, 118, 110, .08);
+            }
+
+            50% {
+                box-shadow: 0 0 0 7px rgba(15, 118, 110, 0);
+            }
+        }
+
+        .hospital-results {
+            padding: 10px 12px 0;
+            display: none;
+        }
+
+        .hospital-results.active {
+            display: block;
+        }
+
+        .results-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .results-head h3 {
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: .95rem;
+        }
+
+        .results-count {
+            font-size: .78rem;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .hospital-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .hospital-card {
+            border: 1px solid #dce9f4;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #fff;
+            cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .hospital-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(14, 61, 92, .15);
+        }
+
+        .h-img {
+            width: 100%;
+            height: 128px;
+            object-fit: cover;
+            display: block;
+            background: #e2e8f0;
+        }
+
+        .h-body {
+            padding: 10px;
+            display: grid;
+            gap: 6px;
+        }
+
+        .h-title {
+            margin: 0;
+            font-size: .88rem;
+            font-weight: 800;
+            line-height: 1.25;
+            color: #10253a;
+        }
+
+        .h-meta {
+            color: #475569;
+            font-size: .78rem;
+            line-height: 1.35;
+        }
+
+        .h-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .h-tag {
+            font-size: .72rem;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: #ecfeff;
+            color: #155e75;
+            border: 1px solid #bae6fd;
+            font-weight: 700;
+        }
+
+        .h-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .h-actions a,
+        .h-actions button {
+            flex: 1;
+            text-align: center;
+            border-radius: 10px;
+            font-size: .75rem;
+            padding: 7px 8px;
+            font-weight: 800;
+            border: 1px solid #d3e2ef;
+            text-decoration: none;
+            background: #f8fafc;
+            color: #0f172a;
+            cursor: pointer;
+        }
+
+        .h-actions .primary {
+            border-color: #0f766e;
+            color: #fff;
+            background: linear-gradient(135deg, #0f766e, #0b6e4f);
+        }
+
+        .receipt-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, .54);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 16px;
+        }
+
+        .receipt-overlay.active {
+            display: flex;
+        }
+
+        .receipt {
+            width: min(560px, 100%);
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #d8e5f0;
+            background: #fff;
+            box-shadow: 0 16px 45px rgba(15, 23, 42, .3);
+        }
+
+        .receipt-head {
+            background: linear-gradient(135deg, #0f766e, #0b6e4f);
+            color: #fff;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .receipt-head h4 {
+            margin: 0;
+            font-size: 1rem;
+            letter-spacing: .2px;
+        }
+
+        .receipt-body {
+            padding: 14px 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .receipt-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 8px;
+            font-size: .88rem;
+            border-bottom: 1px dashed #dbe6f0;
+            padding-bottom: 6px;
+        }
+
+        .receipt-row strong {
+            color: #334155;
+        }
+
+        .receipt-foot {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            padding: 0 16px 14px;
+        }
+
+        .receipt-foot button {
+            border-radius: 10px;
+            font-size: .8rem;
+            padding: 8px 12px;
+        }
+
+        .receipt-foot .ghost {
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+        }
+
+        .chat-input {
+            border-top: 1px solid var(--line);
+            padding: 12px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .inline {
+            display: grid;
+            grid-template-columns: 1fr 1fr 140px;
+            gap: 8px;
+        }
+
+        .booking-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, .56);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 22;
+            padding: 16px;
+        }
+
+        .booking-overlay.active {
+            display: flex;
+        }
+
+        .booking-modal {
+            width: min(560px, 100%);
+            border-radius: 18px;
+            background: #fff;
+            border: 1px solid #d8e5f0;
+            box-shadow: 0 16px 45px rgba(15, 23, 42, .3);
+            overflow: hidden;
+        }
+
+        .booking-head {
+            background: linear-gradient(135deg, #0f766e, #0b6e4f);
+            color: #fff;
+            padding: 13px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .booking-head h4 {
+            margin: 0;
+            font-size: 1rem;
+            letter-spacing: .2px;
+        }
+
+        .booking-body {
+            padding: 14px 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .booking-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .booking-grid input {
+            width: 100%;
+            border: 1px solid #d5e4ef;
+            border-radius: 10px;
+            padding: 9px 10px;
+            font-size: .88rem;
+            background: #fff;
+            font-family: inherit;
+        }
+
+        .booking-foot {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 0 16px 14px;
+        }
+
+        .booking-foot button {
+            border-radius: 10px;
+            font-size: .8rem;
+            padding: 8px 12px;
+        }
+
+        .booking-foot .ghost {
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+        }
+
+        select,
+        button {
+            font-family: inherit;
+        }
+
+        select {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: .92rem;
+            background: #fff;
+        }
+
+        .question-panel {
+            border: 1px solid var(--line);
+            background: #f8fcff;
+            border-radius: 12px;
+            padding: 10px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .question-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .q-pill {
+            border-radius: 999px;
+            border: 1px solid #cce0ef;
+            background: #fff;
+            color: #16425b;
+            padding: 6px 10px;
+            font-size: .76rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .q-pill:hover {
+            background: #eff8ff;
+        }
+
+        .bot-list {
+            margin: 8px 0 0;
+            padding-left: 17px;
+        }
+
+        .bot-list li {
+            margin: 4px 0;
+        }
+
+        button {
+            border: 0;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            cursor: pointer;
+        }
+
+        .small-note {
+            color: var(--muted);
+            font-size: .78rem;
+        }
+
+        @media (max-width: 980px) {
+            .wrap {
+                grid-template-columns: 1fr;
+            }
+
+            .chat {
+                min-height: 70vh;
+            }
+
+            .hospital-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .inline {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .receipt-row {
+                grid-template-columns: 120px 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-mark">AI</div>
+            <div>HealthVision AI · Clinical Assistant</div>
+        </div>
+        <div class="top-actions">
+            <a href="/">Home</a>
+            <a href="/documentation">Docs</a>
+            <a href="/detect">Back to Detection</a>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <section class="card summary">
+            <h1>Personalized AI Report</h1>
+            <p class="muted">This assistant uses your latest scan result to generate a structured report, answer
+                questions, and suggest nearby care options.</p>
+
+            <div class="kv"><strong>Module</strong><span id="sModule">-</span></div>
+            <div class="kv"><strong>Prediction</strong><span id="sPrediction">-</span></div>
+            <div class="kv"><strong>Confidence</strong><span id="sConfidence">-</span></div>
+            <div class="kv"><strong>Generated At</strong><span id="sGenerated">-</span></div>
+            <div id="riskBadge" class="risk moderate">Risk: Moderate</div>
+
+            <div class="report-box">
+                <h3>Summary</h3>
+                <p id="reportSummary" class="muted" style="margin:0"></p>
+            </div>
+
+            <div class="report-box">
+                <h3>Action Plan</h3>
+                <ul id="actionPlan"></ul>
+            </div>
+
+            <div class="report-box">
+                <h3>Questions to Ask Doctor</h3>
+                <ul id="doctorQuestions"></ul>
+            </div>
+
+            <div class="small-note">Medical note: This AI tool is a screening assistant and not a final clinical
+                diagnosis.</div>
+        </section>
+
+        <section class="card chat">
+            <div class="chat-head">
+                <h2>Ask Anything About Your Scan</h2>
+                <div class="muted">You can ask for explanation, precautions, diet guidance, or booking help.</div>
+            </div>
+
+            <div id="chatBody" class="chat-body"></div>
+
+            <div id="searchStatus" class="search-status"></div>
+
+            <div id="hospitalResults" class="hospital-results">
+                <div class="results-head">
+                    <h3>Nearby Hospitals</h3>
+                    <div id="resultsCount" class="results-count"></div>
+                </div>
+                <div id="hospitalGrid" class="hospital-grid"></div>
+            </div>
+
+            <div class="chat-input">
+                <div class="inline">
+                    <select id="stateSelect">
+                        <option value="">Select State</option>
+                    </select>
+                    <select id="districtSelect" disabled>
+                        <option value="">Select District</option>
+                    </select>
+                    <button id="bookBtn">Find Hospitals</button>
+                </div>
+                <div class="question-panel">
+                    <div class="inline" style="grid-template-columns: 1fr 180px;">
+                        <select id="questionSelect">
+                            <option value="">Select AI Question</option>
+                            <option value="explain">Explain my result in simple words</option>
+                            <option value="precautions">What precautions should I follow now?</option>
+                            <option value="diet">Diet and lifestyle guidance</option>
+                            <option value="urgent">When should I see doctor urgently?</option>
+                            <option value="checklist">Generate doctor visit checklist</option>
+                        </select>
+                        <button id="askBtn">Ask AI</button>
+                    </div>
+                    <div id="quickQuestions" class="question-pills"></div>
+                </div>
+                <div class="small-note">Selection-only mode enabled: choose State, District and a predefined AI
+                    question.</div>
+            </div>
+        </section>
+    </main>
+
+    <div id="bookingOverlay" class="booking-overlay" onclick="closeBookingModal(event)">
+        <div class="booking-modal" onclick="event.stopPropagation()">
+            <div class="booking-head">
+                <h4>Book Appointment Slot</h4>
+                <span id="bookingHospitalName">-</span>
+            </div>
+            <div class="booking-body">
+                <div class="small-note" id="bookingHospitalMeta">Select patient details and preferred date/time.</div>
+                <div class="booking-grid">
+                    <input id="patientName" type="text" placeholder="Patient Full Name">
+                    <input id="patientAge" type="number" min="1" max="120" placeholder="Patient Age">
+                    <input id="appointmentDate" type="date">
+                    <input id="appointmentTime" type="time">
+                </div>
+            </div>
+            <div class="booking-foot">
+                <button class="ghost" onclick="closeBookingModal()">Cancel</button>
+                <button id="confirmBookingBtn">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="receiptOverlay" class="receipt-overlay" onclick="closeReceipt(event)">
+        <div class="receipt" onclick="event.stopPropagation()">
+            <div class="receipt-head">
+                <h4>HealthVision Booking Receipt</h4>
+                <span id="receiptStatus">Booked</span>
+            </div>
+            <div id="receiptBody" class="receipt-body"></div>
+            <div class="receipt-foot">
+                <button class="ghost" onclick="closeReceipt()">Close</button>
+                <button onclick="window.print()">Print Receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatBody = document.getElementById('chatBody');
+        const stateSelect = document.getElementById('stateSelect');
+        const districtSelect = document.getElementById('districtSelect');
+        const questionSelect = document.getElementById('questionSelect');
+        const askBtn = document.getElementById('askBtn');
+        const quickQuestions = document.getElementById('quickQuestions');
+        const bookBtn = document.getElementById('bookBtn');
+        const confirmBookingBtn = document.getElementById('confirmBookingBtn');
+        const hospitalResults = document.getElementById('hospitalResults');
+        const hospitalGrid = document.getElementById('hospitalGrid');
+        const resultsCount = document.getElementById('resultsCount');
+        const searchStatus = document.getElementById('searchStatus');
+
+        let scanResult = null;
+        let reportData = null;
+        let hospitalCatalog = [];
+        let selectedHospital = null;
+        let stateDistrictMap = {};
+
+        const HOSPITAL_GENERIC_IMAGE = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="380" viewBox="0 0 600 380"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0f2ff"/><stop offset="1" stop-color="#c8f1de"/></linearGradient></defs><rect width="600" height="380" fill="url(#sky)"/><rect x="42" y="305" width="516" height="42" rx="10" fill="#8db2c9"/><rect x="75" y="110" width="450" height="205" rx="18" fill="#ffffff" stroke="#86adc7" stroke-width="3"/><rect x="120" y="140" width="90" height="120" rx="8" fill="#dff4ff"/><rect x="245" y="140" width="110" height="120" rx="8" fill="#dff4ff"/><rect x="390" y="140" width="90" height="120" rx="8" fill="#dff4ff"/><rect x="255" y="70" width="90" height="80" rx="10" fill="#ffffff" stroke="#86adc7" stroke-width="3"/><rect x="285" y="84" width="30" height="48" rx="5" fill="#0ea5a0"/><rect x="276" y="94" width="48" height="18" rx="4" fill="#0ea5a0"/><rect x="277" y="260" width="46" height="55" rx="7" fill="#9bc4db"/><circle cx="92" cy="95" r="20" fill="#fff4b8"/><rect x="492" y="80" width="18" height="80" rx="4" fill="#7fa2b8"/><path d="M510 80 q28 12 0 24 q28 12 0 24" fill="none" stroke="#ef4444" stroke-width="5"/><text x="300" y="337" text-anchor="middle" fill="#134e6e" font-family="Arial" font-size="18" font-weight="700">HEALTHCARE HOSPITAL</text></svg>');
+
+        function safe(v, d = '-') { return (v === undefined || v === null || v === '') ? d : v; }
+
+        const FALLBACK_STATE_DISTRICTS = {
+            'Andhra Pradesh': ['Anantapur', 'Chittoor', 'East Godavari', 'Guntur', 'Krishna', 'Kurnool', 'Nellore', 'Prakasam', 'Srikakulam', 'Visakhapatnam'],
+            'Arunachal Pradesh': ['Changlang', 'East Siang', 'Itanagar', 'Lohit', 'Tawang', 'West Siang'],
+            'Assam': ['Barpeta', 'Cachar', 'Dibrugarh', 'Goalpara', 'Guwahati', 'Jorhat', 'Nagaon', 'Silchar', 'Sonitpur', 'Tinsukia'],
+            'Bihar': ['Araria', 'Begusarai', 'Bhagalpur', 'Darbhanga', 'Gaya', 'Katihar', 'Madhubani', 'Muzaffarpur', 'Patna', 'Purnia'],
+            'Chhattisgarh': ['Bilaspur', 'Durg', 'Jagdalpur', 'Korba', 'Raigarh', 'Raipur'],
+            'Goa': ['North Goa', 'South Goa'],
+            'Gujarat': ['Ahmedabad', 'Bhavnagar', 'Gandhinagar', 'Jamnagar', 'Rajkot', 'Surat', 'Vadodara'],
+            'Haryana': ['Ambala', 'Faridabad', 'Gurugram', 'Hisar', 'Karnal', 'Panipat', 'Rohtak'],
+            'Himachal Pradesh': ['Bilaspur', 'Hamirpur', 'Kangra', 'Kullu', 'Mandi', 'Shimla', 'Solan'],
+            'Jharkhand': ['Bokaro', 'Deoghar', 'Dhanbad', 'Dumka', 'Hazaribagh', 'Jamshedpur', 'Ranchi'],
+            'Karnataka': ['Belagavi', 'Ballari', 'Bengaluru Urban', 'Davanagere', 'Hubballi', 'Mysuru', 'Mangaluru'],
+            'Kerala': ['Ernakulam', 'Kannur', 'Kollam', 'Kottayam', 'Kozhikode', 'Thiruvananthapuram', 'Thrissur'],
+            'Madhya Pradesh': ['Bhopal', 'Gwalior', 'Indore', 'Jabalpur', 'Rewa', 'Sagar', 'Ujjain'],
+            'Maharashtra': ['Amravati', 'Aurangabad', 'Kolhapur', 'Mumbai City', 'Nagpur', 'Nashik', 'Pune', 'Thane'],
+            'Manipur': ['Bishnupur', 'Churachandpur', 'Imphal East', 'Imphal West', 'Thoubal'],
+            'Meghalaya': ['East Khasi Hills', 'Ri-Bhoi', 'Shillong', 'West Garo Hills', 'West Jaintia Hills'],
+            'Mizoram': ['Aizawl', 'Champhai', 'Kolasib', 'Lunglei', 'Mamit'],
+            'Nagaland': ['Dimapur', 'Kohima', 'Mokokchung', 'Phek', 'Wokha'],
+            'Odisha': ['Balasore', 'Berhampur', 'Bhubaneswar', 'Cuttack', 'Puri', 'Rourkela', 'Sambalpur'],
+            'Punjab': ['Amritsar', 'Bathinda', 'Jalandhar', 'Ludhiana', 'Mohali', 'Patiala'],
+            'Rajasthan': ['Ajmer', 'Bikaner', 'Jaipur', 'Jodhpur', 'Kota', 'Udaipur'],
+            'Sikkim': ['East Sikkim', 'North Sikkim', 'South Sikkim', 'West Sikkim'],
+            'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Salem', 'Thanjavur', 'Tiruchirappalli', 'Tirunelveli'],
+            'Telangana': ['Adilabad', 'Hyderabad', 'Karimnagar', 'Khammam', 'Nalgonda', 'Warangal'],
+            'Tripura': ['Agartala', 'Dhalai', 'Gomati', 'North Tripura', 'Unakoti'],
+            'Uttar Pradesh': ['Agra', 'Allahabad', 'Bareilly', 'Ghaziabad', 'Gorakhpur', 'Kanpur', 'Lucknow', 'Meerut', 'Noida', 'Varanasi'],
+            'Uttarakhand': ['Dehradun', 'Haridwar', 'Nainital', 'Pauri', 'Rudrapur', 'Tehri'],
+            'West Bengal': ['Asansol', 'Darjeeling', 'Durgapur', 'Howrah', 'Kolkata', 'Malda', 'Siliguri'],
+            'Andaman and Nicobar Islands': ['Nicobar', 'North and Middle Andaman', 'South Andaman'],
+            'Chandigarh': ['Chandigarh'],
+            'Dadra and Nagar Haveli and Daman and Diu': ['Dadra and Nagar Haveli', 'Daman', 'Diu'],
+            'Delhi': ['Central Delhi', 'East Delhi', 'New Delhi', 'North Delhi', 'South Delhi', 'West Delhi'],
+            'Jammu and Kashmir': ['Anantnag', 'Baramulla', 'Jammu', 'Kupwara', 'Pulwama', 'Srinagar'],
+            'Ladakh': ['Kargil', 'Leh'],
+            'Lakshadweep': ['Kavaratti'],
+            'Puducherry': ['Karaikal', 'Mahe', 'Puducherry', 'Yanam']
+        };
+
+        const QUICK_QUESTIONS = [
+            { key: 'explain', label: 'Explain Result' },
+            { key: 'precautions', label: 'Precautions' },
+            { key: 'diet', label: 'Diet Plan' },
+            { key: 'urgent', label: 'Urgent Signs' },
+            { key: 'checklist', label: 'Doctor Checklist' }
+        ];
+
+        function addBubble(text, role = 'bot', isHtml = false) {
+            const el = document.createElement('div');
+            el.className = 'bubble ' + role;
+            if (isHtml) el.innerHTML = text;
+            else el.textContent = text;
+            chatBody.appendChild(el);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function canonicalDistrictName(name) {
+            let n = (name || '').toString().trim();
+            n = n.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+            if (/^munger$/i.test(n) || /monghyr/i.test(name || '')) return 'Munger';
+            if (/^purnia$/i.test(n) || /purnea/i.test(name || '')) return 'Purnia';
+            return n;
+        }
+
+        function normalizeDistrictList(list) {
+            const seen = new Set();
+            const out = [];
+            (list || []).forEach(d => {
+                const x = canonicalDistrictName(d);
+                const key = x.toLowerCase();
+                if (x && !seen.has(key)) {
+                    seen.add(key);
+                    out.push(x);
+                }
+            });
+            return out.sort((a, b) => a.localeCompare(b));
+        }
+
+        function initHospitalCatalog() {
+            const localityBank = ['Main Road', 'Civil Lines', 'Medical College Road', 'Station Road', 'Old Bypass', 'New Market', 'Ring Road', 'Lake View'];
+            const hospitalPrefixes = ['Aarogyam', 'CityCare', 'Medistar', 'LifeBridge', 'Noble Heart', 'Sunrise', 'Shanti', 'PulsePoint'];
+            const typeBank = ['Multi Speciality Hospital', 'Super Speciality Center', 'Advanced Care Institute'];
+            const specialityBank = ['Cardiology', 'Dermatology', 'General Medicine', 'Orthopedics', 'Pediatrics', 'Neurology', 'Pulmonology', 'ENT'];
+
+            let id = 1;
+            const generated = [];
+
+            Object.keys(stateDistrictMap).forEach((state, sIdx) => {
+                const districts = stateDistrictMap[state];
+                districts.forEach((district, dIdx) => {
+                    for (let i = 0; i < 3; i++) {
+                        const codeBase = String(100000 + ((sIdx + 11) * 137 + (dIdx + 7) * 41 + i * 13) % 899999);
+                        const locality = localityBank[(sIdx + dIdx + i) % localityBank.length];
+                        const prefix = hospitalPrefixes[(sIdx * 2 + dIdx + i) % hospitalPrefixes.length];
+                        const type = typeBank[(dIdx + i) % typeBank.length];
+                        const rating = (3.9 + ((sIdx + dIdx + i) % 10) * 0.1).toFixed(1);
+                        const distance = (1 + ((sIdx + dIdx + i) % 19) * 0.45).toFixed(1);
+
+                        generated.push({
+                            id: id++,
+                            name: `${prefix} ${district} ${type}`,
+                            city: district,
+                            district,
+                            state,
+                            locality,
+                            pincode: codeBase,
+                            rating,
+                            distance,
+                            beds: 120 + ((sIdx + dIdx + i) % 18) * 15,
+                            emergency: ((sIdx + dIdx + i) % 2) === 0 ? '24x7 Emergency' : 'Emergency Till 11 PM',
+                            waiting_time: 8 + ((sIdx + dIdx + i) % 7) * 5,
+                            specialities: [
+                                specialityBank[(i + 1) % specialityBank.length],
+                                specialityBank[(i + 3) % specialityBank.length],
+                                specialityBank[(i + 5) % specialityBank.length]
+                            ],
+                            image: HOSPITAL_GENERIC_IMAGE,
+                            maps_url: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(`${district} ${state} hospital`),
+                            appointment_url: 'https://www.google.com/search?q=' + encodeURIComponent(`${district} ${state} doctor appointment booking`)
+                        });
+                    }
+                });
+            });
+
+            hospitalCatalog = generated;
+        }
+
+        function populateStates() {
+            stateSelect.innerHTML = '<option value="">Select State</option>';
+            Object.keys(stateDistrictMap).sort().forEach(state => {
+                const opt = document.createElement('option');
+                opt.value = state;
+                opt.textContent = state;
+                stateSelect.appendChild(opt);
+            });
+        }
+
+        function populateDistricts(state) {
+            districtSelect.innerHTML = '<option value="">Select District</option>';
+
+            if (!state || !stateDistrictMap[state]) {
+                districtSelect.disabled = true;
+                return;
+            }
+
+            stateDistrictMap[state].forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                districtSelect.appendChild(opt);
+            });
+            districtSelect.disabled = false;
+        }
+
+        function intelligentSelectionFix() {
+            const state = stateSelect.value;
+            const district = districtSelect.value;
+            if (state && district && !(stateDistrictMap[state] || []).includes(district)) {
+                districtSelect.value = '';
+                addBubble('AI correction: district selection was reset because it did not match the selected state.', 'bot');
+            }
+        }
+
+        function searchHospitalsBySelection(state, district) {
+            let list = hospitalCatalog.filter(h => h.state === state && h.district === district);
+
+            if (list.length < 5) {
+                const stateWide = hospitalCatalog.filter(h => h.state === state && h.district !== district);
+                const extras = stateWide.filter(h => !list.find(x => x.id === h.id)).slice(0, 5 - list.length);
+                list = list.concat(extras);
+            }
+
+            if (list.length < 5) {
+                const nationWide = hospitalCatalog.filter(h => !list.find(x => x.id === h.id));
+                list = list.concat(nationWide.slice(0, 5 - list.length));
+            }
+
+            return list.sort((a, b) => Number(a.distance) - Number(b.distance)).slice(0, 14);
+        }
+
+        function formatQuestionAnswer(key) {
+            const info = (scanResult && scanResult.disease_info) ? scanResult.disease_info : {};
+            const pred = safe(scanResult && scanResult.prediction, 'Not Available');
+            const conf = safe(scanResult && scanResult.confidence, '0');
+            const recommendation = safe(info.recommendation, 'Consult a qualified healthcare professional for next steps.');
+
+            if (key === 'explain') {
+                return '<strong>AI Explanation</strong><br>Prediction: <strong>' + pred + '</strong> with confidence <strong>' + conf + '%</strong>.<ul class="bot-list"><li>' + safe(info.description, 'No detailed description available.') + '</li><li>This is a screening outcome, not a final diagnosis.</li><li>Use this report to discuss with a specialist.</li></ul>';
+            }
+            if (key === 'precautions') {
+                return '<strong>Recommended Precautions</strong><ul class="bot-list"><li>' + recommendation + '</li><li>Maintain hygiene and monitor visible changes daily.</li><li>Avoid self-medication without doctor advice.</li><li>If symptoms worsen quickly, seek in-person consultation.</li></ul>';
+            }
+            if (key === 'diet') {
+                return '<strong>Diet and Lifestyle Guidance</strong><ul class="bot-list"><li>Stay hydrated and prefer fresh home-cooked meals.</li><li>Reduce highly processed, oily, and high-sugar foods.</li><li>Ensure 7 to 8 hours of sleep and moderate daily activity.</li><li>Follow condition-specific diet after doctor confirmation.</li></ul>';
+            }
+            if (key === 'urgent') {
+                return '<strong>Urgent Warning Signs</strong><ul class="bot-list"><li>Sudden pain increase, fever, swelling, or bleeding.</li><li>Rapid spread of redness, rash, or discoloration.</li><li>Breathing difficulty, chest pain, severe dizziness, or confusion.</li><li>If any of these occur, seek emergency care immediately.</li></ul>';
+            }
+            if (key === 'checklist') {
+                return '<strong>Doctor Visit Checklist</strong><ul class="bot-list"><li>Carry this AI report and latest photos.</li><li>Note symptom start date and progression timeline.</li><li>List current medicines, allergies, and past conditions.</li><li>Ask about tests, diagnosis confirmation, and treatment options.</li></ul>';
+            }
+            return '<strong>Please select a valid question.</strong>';
+        }
+
+        function renderQuickQuestions() {
+            quickQuestions.innerHTML = '';
+            QUICK_QUESTIONS.forEach(q => {
+                const btn = document.createElement('button');
+                btn.className = 'q-pill';
+                btn.textContent = q.label;
+                btn.type = 'button';
+                btn.addEventListener('click', () => {
+                    questionSelect.value = q.key;
+                    askSelectedQuestion();
+                });
+                quickQuestions.appendChild(btn);
+            });
+        }
+
+        function renderHospitalCards(hospitals, state, district) {
+            hospitalGrid.innerHTML = '';
+            if (!hospitals.length) {
+                hospitalResults.classList.remove('active');
+                addBubble('No hospitals matched this selection. Try another district.', 'bot');
+                return;
+            }
+
+            hospitals.forEach(h => {
+                const card = document.createElement('article');
+                card.className = 'hospital-card';
+                card.innerHTML =
+                    '<img class="h-img" src="' + h.image + '" alt="' + h.name + '">' +
+                    '<div class="h-body">' +
+                    '<h4 class="h-title">' + h.name + '</h4>' +
+                    '<div class="h-meta">' + h.locality + ', ' + h.city + ', ' + h.state + ' - ' + h.pincode + '<br>Rating: ' + h.rating + ' | ' + h.distance + ' km | Beds: ' + h.beds + ' | Wait: ' + h.waiting_time + ' min</div>' +
+                    '<div class="h-tags">' + h.specialities.slice(0, 3).map(s => '<span class="h-tag">' + s + '</span>').join('') + '</div>' +
+                    '<div class="h-actions">' +
+                    '<a href="' + h.maps_url + '" target="_blank" rel="noopener">Open Map</a>' +
+                    '<button class="primary" data-id="' + h.id + '">Book Slot</button>' +
+                    '</div>' +
+                    '</div>';
+
+                const btn = card.querySelector('button.primary');
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openBookingModal(h);
+                });
+                hospitalGrid.appendChild(card);
+            });
+
+            resultsCount.textContent = hospitals.length + ' hospitals shown';
+            hospitalResults.classList.add('active');
+            addBubble('Showing hospitals for selected filters: ' + state + ' | ' + district + '.', 'bot');
+        }
+
+        function openBookingModal(hospital) {
+            selectedHospital = hospital;
+            document.getElementById('bookingHospitalName').textContent = hospital.name;
+            document.getElementById('bookingHospitalMeta').textContent = hospital.locality + ', ' + hospital.city + ', ' + hospital.state;
+
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const minDate = `${yyyy}-${mm}-${dd}`;
+
+            const dateInput = document.getElementById('appointmentDate');
+            dateInput.min = minDate;
+            dateInput.value = minDate;
+            document.getElementById('appointmentTime').value = '11:00';
+            document.getElementById('patientName').value = '';
+            document.getElementById('patientAge').value = '';
+
+            document.getElementById('bookingOverlay').classList.add('active');
+        }
+
+        function closeBookingModal(e) {
+            const overlay = document.getElementById('bookingOverlay');
+            if (e && e.target !== overlay) return;
+            overlay.classList.remove('active');
+        }
+        window.closeBookingModal = closeBookingModal;
+
+        function confirmBooking() {
+            if (!selectedHospital) return;
+
+            const patientName = (document.getElementById('patientName').value || '').trim();
+            const patientAge = Number(document.getElementById('patientAge').value || 0);
+            const appointmentDate = document.getElementById('appointmentDate').value;
+            const appointmentTime = document.getElementById('appointmentTime').value;
+
+            if (!patientName || patientAge < 1 || patientAge > 120 || !appointmentDate || !appointmentTime) {
+                addBubble('Please fill patient name, age, date and time to confirm booking.', 'bot');
+                return;
+            }
+
+            closeBookingModal();
+
+            const token = 'HV' + String(Math.floor(100000 + Math.random() * 900000));
+            const amount = 300 + Math.floor(Math.random() * 700);
+            const doctor = ['Dr. A. Sharma', 'Dr. P. Verma', 'Dr. R. Singh', 'Dr. S. Iqbal'][Math.floor(Math.random() * 4)];
+
+            document.getElementById('receiptBody').innerHTML =
+                '<div class="receipt-row"><strong>Booking ID</strong><span>' + token + '</span></div>' +
+                '<div class="receipt-row"><strong>Patient Name</strong><span>' + patientName + '</span></div>' +
+                '<div class="receipt-row"><strong>Patient Age</strong><span>' + patientAge + ' years</span></div>' +
+                '<div class="receipt-row"><strong>Hospital</strong><span>' + selectedHospital.name + '</span></div>' +
+                '<div class="receipt-row"><strong>Location</strong><span>' + selectedHospital.locality + ', ' + selectedHospital.city + ' - ' + selectedHospital.pincode + '</span></div>' +
+                '<div class="receipt-row"><strong>Department</strong><span>' + selectedHospital.specialities[0] + '</span></div>' +
+                '<div class="receipt-row"><strong>Consulting Doctor</strong><span>' + doctor + '</span></div>' +
+                '<div class="receipt-row"><strong>Appointment Date</strong><span>' + appointmentDate + '</span></div>' +
+                '<div class="receipt-row"><strong>Time Slot</strong><span>' + appointmentTime + '</span></div>' +
+                '<div class="receipt-row"><strong>Consultation Fee</strong><span>INR ' + amount + '</span></div>' +
+                '<div class="receipt-row"><strong>Emergency Support</strong><span>' + selectedHospital.emergency + '</span></div>' +
+                '<div class="receipt-row"><strong>Status</strong><span>Confirmed</span></div>';
+
+            document.getElementById('receiptOverlay').classList.add('active');
+            addBubble('Booking confirmed for ' + patientName + ' at ' + selectedHospital.name + '. ID: ' + token + '.', 'bot');
+        }
+
+        function closeReceipt(e) {
+            const overlay = document.getElementById('receiptOverlay');
+            if (e && e.target !== overlay) return;
+            overlay.classList.remove('active');
+        }
+        window.closeReceipt = closeReceipt;
+
+        async function runHospitalSearchBySelection() {
+            intelligentSelectionFix();
+            const state = stateSelect.value;
+            const district = districtSelect.value;
+
+            if (!state || !district) {
+                addBubble('Please select both State and District before searching hospitals.', 'bot');
+                return;
+            }
+
+            searchStatus.textContent = 'AI is finding nearby hospitals based on your selected State and District...';
+            searchStatus.classList.add('active');
+            hospitalResults.classList.remove('active');
+
+            await new Promise(r => setTimeout(r, 900));
+            const resultList = searchHospitalsBySelection(state, district);
+            searchStatus.classList.remove('active');
+            renderHospitalCards(resultList, state, district);
+        }
+
+        function askSelectedQuestion() {
+            const key = questionSelect.value;
+            if (!key) {
+                addBubble('Please select a question from the dropdown or quick question buttons.', 'bot');
+                return;
+            }
+
+            const questionLabel = (questionSelect.options[questionSelect.selectedIndex] || {}).textContent || 'Selected Question';
+            addBubble(questionLabel, 'user');
+            addBubble(formatQuestionAnswer(key), 'bot', true);
+            questionSelect.value = '';
+        }
+
+        async function loadAllDistrictData() {
+            stateDistrictMap = {};
+            Object.keys(FALLBACK_STATE_DISTRICTS).forEach(s => {
+                stateDistrictMap[s] = normalizeDistrictList(FALLBACK_STATE_DISTRICTS[s]);
+            });
+            try {
+                const res = await fetch('https://cdn.jsdelivr.net/gh/sab99r/Indian-States-And-Districts@master/states-and-districts.json');
+                if (!res.ok) throw new Error('district data unavailable');
+                const payload = await res.json();
+
+                const map = {};
+                if (Array.isArray(payload)) {
+                    payload.forEach(item => {
+                        const s = item.state || item.name || item.State || item.STATE;
+                        const d = item.districts || item.Districts || item.district || item.DISTRICTS;
+                        if (s && Array.isArray(d)) map[s] = normalizeDistrictList(d);
+                    });
+                } else if (payload.states && Array.isArray(payload.states)) {
+                    payload.states.forEach(item => {
+                        if (item.state && Array.isArray(item.districts)) map[item.state] = normalizeDistrictList(item.districts);
+                    });
+                } else {
+                    Object.keys(payload || {}).forEach(k => {
+                        if (Array.isArray(payload[k])) map[k] = normalizeDistrictList(payload[k]);
+                    });
+                }
+
+                if (Object.keys(map).length > 20) {
+                    stateDistrictMap = map;
+                    addBubble('AI location dataset synced with full India district directory.', 'bot');
+                }
+            } catch (e) {
+                addBubble('Using offline district dataset. All major states and districts are available.', 'bot');
+            }
+        }
+
+        async function loadReport() {
+            const raw = localStorage.getItem('hv_last_scan');
+            if (!raw) {
+                addBubble('No recent scan result found. Please run a scan first from the Detection page.');
+                return;
+            }
+
+            try {
+                scanResult = JSON.parse(raw);
+            } catch (e) {
+                addBubble('Could not load scan result context. Please scan again.');
+                return;
+            }
+
+            document.getElementById('sModule').textContent = safe(scanResult.module, 'eye');
+            document.getElementById('sPrediction').textContent = safe(scanResult.prediction);
+            document.getElementById('sConfidence').textContent = safe(scanResult.confidence) + '%';
+            document.getElementById('sGenerated').textContent = safe(scanResult.created_at, new Date().toLocaleString());
+
+            try {
+                const res = await fetch('/api/ai/report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scan_result: scanResult })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || 'report failed');
+
+                const report = data.report;
+                reportData = report;
+                document.getElementById('reportSummary').textContent = report.summary || '-';
+
+                const risk = document.getElementById('riskBadge');
+                risk.className = 'risk ' + (report.severity || 'moderate');
+                risk.textContent = 'Risk: ' + safe(report.risk_level, 'Moderate');
+
+                const actionPlan = document.getElementById('actionPlan');
+                actionPlan.innerHTML = '';
+                (report.action_plan || []).forEach(x => {
+                    const li = document.createElement('li');
+                    li.textContent = x;
+                    actionPlan.appendChild(li);
+                });
+
+                const doctorQ = document.getElementById('doctorQuestions');
+                doctorQ.innerHTML = '';
+                (report.doctor_questions || []).forEach(x => {
+                    const li = document.createElement('li');
+                    li.textContent = x;
+                    doctorQ.appendChild(li);
+                });
+
+                addBubble('Report ready. You can now ask me detailed questions about this scan.');
+            } catch (e) {
+                addBubble('Could not generate report right now. You can still ask questions in chat.');
+            }
+        }
+
+        stateSelect.addEventListener('change', () => {
+            populateDistricts(stateSelect.value);
+        });
+
+        askBtn.addEventListener('click', askSelectedQuestion);
+        bookBtn.addEventListener('click', runHospitalSearchBySelection);
+        confirmBookingBtn.addEventListener('click', confirmBooking);
+
+        renderQuickQuestions();
+        (async function initPage() {
+            await loadAllDistrictData();
+            initHospitalCatalog();
+            populateStates();
+            loadReport();
+        })();
+    </script>
+</body>
+
+</html>
