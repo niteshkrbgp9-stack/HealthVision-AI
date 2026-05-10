@@ -417,6 +417,40 @@
             color: var(--primary)
         }
 
+        .workflow-video-panel {
+            margin-top: 42px;
+            background: var(--white);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .workflow-video-panel video {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            max-height: 620px;
+            background: #020617;
+        }
+
+        .workflow-video-caption {
+            padding: 18px 22px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .workflow-video-caption h3 {
+            color: var(--text-dark);
+            font-size: 1.12rem;
+            margin-bottom: 6px;
+        }
+
+        .workflow-video-caption p {
+            color: #64748b;
+            font-size: .9rem;
+            line-height: 1.65;
+        }
+
         /* ── CTA Button ── */
         .cta-btn {
             display: inline-flex;
@@ -913,6 +947,17 @@
                     <h4>AI Follow-up</h4>
                     <p>Open AI assistant for report explanation, precautions, hospital finder, and booking receipt
                         workflow.</p>
+                </div>
+            </div>
+            <div class="workflow-video-panel">
+                <video controls preload="metadata">
+                    <source src="/animation-video/healthvision_workflow.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="workflow-video-caption">
+                    <h3>Workflow Demo Video</h3>
+                    <p>Watch the HealthVision AI process from user input through preprocessing, model prediction,
+                        result display, and assistant-guided next steps.</p>
                 </div>
             </div>
         </div>

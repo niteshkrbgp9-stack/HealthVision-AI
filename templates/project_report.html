@@ -322,6 +322,26 @@
             font-family: 'Courier New', monospace
         }
 
+        .workflow-frame {
+            background: transparent;
+            border: 0;
+            border-radius: var(--radius);
+            box-shadow: none;
+            overflow: visible;
+            margin: 18px 0 24px;
+        }
+
+        .workflow-frame iframe {
+            display: block;
+            width: 100%;
+            height: 480px;
+            border: 0;
+            border-radius: var(--radius);
+            background: transparent;
+            box-shadow: var(--shadow-lg);
+            transition: height .2s ease;
+        }
+
         /* badges */
         .severity {
             display: inline-block;
@@ -394,6 +414,10 @@
 
             .toc ol {
                 columns: 1
+            }
+
+            .workflow-frame iframe {
+                border-radius: 12px
             }
         }
     </style>
@@ -468,6 +492,7 @@
             <li><a href="#problem-statement">Problem Statement</a></li>
             <li><a href="#objectives">Objectives</a></li>
             <li><a href="#literature-review">Literature Review</a></li>
+            <li><a href="#workflow-animation">AI Workflow Animation</a></li>
             <li><a href="#system-architecture">System Architecture</a></li>
             <li><a href="#technology-stack">Technology Stack</a></li>
             <li><a href="#module-description">Module Description</a></li>
@@ -587,6 +612,16 @@
             <p>Nail disorders often serve as indicators of both localized and systemic diseases. AI-based nail analysis
                 is an emerging field, with recent studies demonstrating the feasibility of automated detection of
                 conditions like onychomycosis and psoriasis.</p>
+        </section>
+
+        <section id="workflow-animation">
+            <h2>AI Workflow Animation</h2>
+            <p>This interactive workflow animation presents the complete HealthVision AI journey from image capture and
+                preprocessing to model inference, result generation, and AI-assisted follow-up.</p>
+            <div class="workflow-frame">
+                <iframe class="workflow-auto-height" src="/animation-video/healthvision_ai_workflow_animation.html"
+                    title="HealthVision AI workflow animation" loading="lazy"></iframe>
+            </div>
         </section>
 
         <!-- 6. System Architecture -->
@@ -1331,6 +1366,15 @@ CUSTOM_OBJECTS = {"DepthwiseConv2D": PatchedDepthwiseConv2D}</code></pre>
         </div>
     </div>
 
+    <script>
+        window.addEventListener('message', event => {
+            if (!event.data || event.data.type !== 'healthvision-workflow-height') return;
+            const height = Math.max(360, Number(event.data.height || 0));
+            document.querySelectorAll('.workflow-auto-height').forEach(frame => {
+                frame.style.height = `${height}px`;
+            });
+        });
+    </script>
 </body>
 
 </html>

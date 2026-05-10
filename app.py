@@ -454,6 +454,11 @@ def ai_assistant():
     return render_template("ai_assistant.html")
 
 
+@app.route("/animation-video/<path:filename>")
+def animation_video_file(filename):
+    return send_from_directory("Animation And Video", filename)
+
+
 @app.route("/team/<path:filename>")
 def team_image(filename):
     return send_from_directory("Team", filename)
