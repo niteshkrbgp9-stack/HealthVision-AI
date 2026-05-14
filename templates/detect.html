@@ -475,10 +475,27 @@
             border: 2px solid rgba(8, 145, 178, .12);
         }
 
+        .preview-container.upload-preview {
+            margin-top: 0;
+            min-height: 260px;
+            background: linear-gradient(135deg, rgba(8, 145, 178, .04) 0%, rgba(16, 185, 129, .04) 100%);
+            border: 2px solid rgba(8, 145, 178, .22);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
         .preview-container img {
             width: 100%;
             border-radius: var(--radius);
             display: block;
+        }
+
+        .preview-container.upload-preview img {
+            width: 100%;
+            height: min(42vh, 380px);
+            object-fit: contain;
+            background: #f8fcff;
         }
 
         /* ═══ SCAN OVERLAY ═══ */
@@ -2184,6 +2201,8 @@
             selectedFile = null;
             capturedBlob = null;
             previewContainer.style.display = 'none';
+            previewContainer.classList.remove('upload-preview');
+            if (currentMode === 'upload') uploadZone.style.display = '';
             predictBtn.style.display = 'none';
             loadingState.style.display = 'none';
             resultCard.style.display = 'none';
@@ -2202,7 +2221,7 @@
 
         /* ─── Show scanning animation ───────────────────────────── */
         async function showScanAnimation(durationMs) {
-            previewContainer.style.display = 'block';
+            previewContainer.style.display = previewContainer.classList.contains('upload-preview') ? 'flex' : 'block';
             scanOverlay.classList.add('active');
             analyzingOverlay.classList.add('active');
             await delay(durationMs || 1800);
@@ -2230,7 +2249,9 @@
             const reader = new FileReader();
             reader.onload = async (e) => {
                 previewImage.src = e.target.result;
-                previewContainer.style.display = 'block';
+                uploadZone.style.display = 'none';
+                previewContainer.classList.add('upload-preview');
+                previewContainer.style.display = 'flex';
                 await showScanAnimation(1500);
                 predictBtn.style.display = 'block';
             };
@@ -2374,6 +2395,7 @@
                 cameraContainer.style.display = 'none';
 
                 previewImage.src = URL.createObjectURL(blob);
+                previewContainer.classList.remove('upload-preview');
                 captureBtn.style.display = 'none';
                 flipBtn.style.display = 'none';
                 retakeBtn.style.display = '';
